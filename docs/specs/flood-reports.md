@@ -8,8 +8,8 @@
 
 | ชื่อ | ค่า | ใช้ใน |
 | ---- | --- | ----- |
-| `MERGE_WINDOW` | 2 ชั่วโมง | RPT-REQ-004 |
-| `EXPIRY` | 6 ชั่วโมง | RPT-REQ-005 |
+| `MERGE_WINDOW_MS` | 2 ชั่วโมง | RPT-REQ-004 |
+| `EXPIRY_MS` | 6 ชั่วโมง | RPT-REQ-005 |
 | `DEPTH_MIN_CM` / `DEPTH_MAX_CM` | 1 / 300 | RPT-REQ-001 |
 | `LANDMARK_MAX_CHARS` | 100 | RPT-REQ-001 |
 | `PHONE_LIKE_DIGITS` | 9 | RPT-REQ-001, 008 |
@@ -40,7 +40,7 @@ Acceptance criteria
 - ช่องใดไม่ผ่าน → `400` และ body เป็น `{ error: "invalid report", fields: [...] }` โดย `fields` เรียงตามลำดับ `districtId`, `landmark`, `depthCm`, `seenAt` และไม่สร้างหรือแก้รายงาน
 - `depthCm` เป็น `40.5`, `"40"`, `0`, `301`, `-5` → `400` และมี `depthCm` ใน `fields`
 - `depthCm` เป็น `1` และ `300` → ผ่าน
-- `landmark` เป็น `"   "`, `"​"`, หรือยาว 101 code point หลังทำเป็นข้อความแสดง → `400`; ยาว 100 code point พอดี → ผ่าน
+- `landmark` เป็น `"   "`, `"\u200B"`, หรือยาว 101 code point หลังทำเป็นข้อความแสดง → `400`; ยาว 100 code point พอดี → ผ่าน
 - `landmark` เป็น `"ซอย 5\nหน้าร้าน"` → `400`
 - `landmark` เป็น `"หน้าบ้าน 081-234-5678"`, `"โทร 081 234 5678"`, `"๐๘๑๒๓๔๕๖๗๘"` → `400`
 - `landmark` เป็น `"ซอยลาดพร้าว 71"` และ `"ซอย 12345678"` (8 หลัก) → ผ่าน
@@ -81,8 +81,8 @@ Acceptance criteria
 Acceptance criteria
 - `"ซอยลาดพร้าว 71"` กับ `"  ซอยลาดพร้าว   71 "` เป็นจุดเดิม
 - `"Central Ladprao"` กับ `"central ladprao"` เป็นจุดเดิม
-- `"ซอยลาดพร้าว​ 71"` กับ `"ซอยลาดพร้าว 71"` เป็นจุดเดิม
-- `"หน้าตลาดนำ"` กับ `"หน้าตลาดนํา"` เป็นจุดเดิม
+- `"ซอยลาดพร้าว\u200B 71"` กับ `"ซอยลาดพร้าว 71"` เป็นจุดเดิม
+- `"หน้าตลาดน\u0E33"` กับ `"หน้าตลาดน\u0E4D\u0E32"` เป็นจุดเดิม
 - `"ซอยลาดพร้าว 71"` กับ `"ซ.ลาดพร้าว 71"` **ไม่**เป็นจุดเดิม (ยอมให้ซ้ำ ดีกว่ารวมผิดจุด)
 - จุดสังเกตเดียวกันคนละเขตไม่เป็นจุดเดิม
 - รายงานแสดงข้อความแสดงของการแจ้งครั้งแรก (ไม่แปลงตัวพิมพ์ ไม่แทน `ํา`)
@@ -238,7 +238,9 @@ type ReportView = {           // ที่ store.submit() / store.active() ค�
 - `class ReportStore`
   - `submit(input: ReportInput, now: Date): { report: ReportView; merged: boolean }`
   - `active(districtId: string, now: Date): ReportView[]` คืนทุกรายงานที่ยังไม่หมดอายุ เรียงตาม RPT-REQ-006 **ไม่**ตัดจุดซ้ำ
-  - `all(): StoredReport[]` รวมที่หมดอายุ ใช้ใน test
+  - `all(): readonly StoredReport[]` รวมที่หมดอายุ ใช้ใน test เท่านั้น ห้ามใช้ใน route สาธารณะ
+  - `submit` โยน `RangeError` ก่อนแตะ store ถ้า `depthCm` ไม่ใช่จำนวนเต็ม ≥ 1 หรือ `seenAt` parse ไม่ได้ (ด่านที่สองหลัง `validateReportInput`)
+- `MERGE_WINDOW_MS`, `EXPIRY_MS`
 - `REPORTS_NOTICE`
 
 signature ของ `submit` และ `active` ตรงกับที่ `tests/reports.test.ts` ใช้อยู่แล้ว
