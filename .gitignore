@@ -3,3 +3,10 @@ node_modules/
 .env.*
 CLAUDE.local.md
 .claude/settings.local.json
+.agents/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/security-baseline/
+.hermes/
+.kiro
