@@ -63,6 +63,33 @@ export function landmarkKey(raw: string): string {
   return displayLandmark(raw).replaceAll("\u0E4D\u0E32", "\u0E33").toLowerCase()
 }
 
+const DEPTH_MIN_CM = 1
+const DEPTH_MAX_CM = 300
+
+export type ValidationResult = { ok: true; value: ReportInput } | { ok: false; fields: string[] }
+
+/**
+ * Check an untrusted request body at the API boundary (RPT-REQ-001) and keep only the four known fields
+ * (RPT-REQ-008). Minimum checks for now: types, depth range and a parseable seen time. District, landmark
+ * length/phone and seen-time format/window checks come in plan steps 3 and 4.
+ */
+export function validateReportInput(body: unknown): ValidationResult {
+  const fields = ["districtId", "landmark", "depthCm", "seenAt"]
+  if (typeof body !== "object" || body === null || Array.isArray(body)) return { ok: false, fields }
+
+  const { districtId, landmark, depthCm, seenAt } = body as Record<string, unknown>
+  const bad: string[] = []
+  if (typeof districtId !== "string") bad.push("districtId")
+  if (typeof landmark !== "string" || displayLandmark(landmark) === "") bad.push("landmark")
+  if (typeof depthCm !== "number" || !Number.isInteger(depthCm) || depthCm < DEPTH_MIN_CM || depthCm > DEPTH_MAX_CM) {
+    bad.push("depthCm")
+  }
+  if (typeof seenAt !== "string" || Number.isNaN(new Date(seenAt).getTime())) bad.push("seenAt")
+
+  if (bad.length > 0) return { ok: false, fields: bad }
+  return { ok: true, value: { districtId, landmark, depthCm, seenAt } as ReportInput }
+}
+
 function compareConfirmations(a: Confirmation, b: Confirmation): number {
   return a.seenAt.getTime() - b.seenAt.getTime() || a.receivedAt.getTime() - b.receivedAt.getTime()
 }

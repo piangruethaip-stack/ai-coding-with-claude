@@ -1,6 +1,6 @@
 # Plan: ให้คนในพื้นที่รายงานจุดน้ำท่วม
 
-> Status: in progress (ขั้น 2 เสร็จ) · Date: 2026-10-01 · Spec: [docs/specs/flood-reports.md](../specs/flood-reports.md) · Intent: [docs/intent/flood-reports.md](../intent/flood-reports.md)
+> Status: in progress (ขั้น 1, 2, 5 เสร็จ) · Date: 2026-10-01 · Spec: [docs/specs/flood-reports.md](../specs/flood-reports.md) · Intent: [docs/intent/flood-reports.md](../intent/flood-reports.md)
 
 วิธี: tracer bullet ทำเส้นทางที่บางที่สุดให้วิ่งครบทุกชั้นก่อน (API → logic → store → test) แล้วค่อยเติมกติกา
 repo นี้ไม่มีฐานข้อมูล ชั้นเก็บข้อมูลคือ `ReportStore` ในหน่วยความจำตาม spec
@@ -21,15 +21,15 @@ repo นี้ไม่มีฐานข้อมูล ชั้นเก็�
 
 ## คืนนี้
 
-### 1. Tracer bullet: POST → store → GET
+### 1. Tracer bullet: POST → store → GET ✅
 
-- [ ] test ก่อน ใน `tests/app.test.ts`
-  - [ ] `POST /reports` ข้อมูลถูกต้อง → `201`, `merged: false`, มี `reportsNotice` (RPT-REQ-001 กรณีปกติ, RPT-REQ-009)
-  - [ ] `GET /districts/lat-phrao` หลัง POST → `reports` มี 1 รายการ **7 key พอดี** เวลาเป็น `+07:00` และมี `reportsNotice` (RPT-REQ-006, RPT-REQ-009)
-  - [ ] เขตที่ไม่มีรายงาน → `reports: []` (RPT-REQ-006)
-  - [ ] ตรวจขั้นต่ำ: body ไม่ใช่ object, ช่องใดชนิดผิด หรือ `depthCm` ไม่ใช่จำนวนเต็ม 1–300 → `400` และ store ไม่เปลี่ยน (RPT-REQ-001 บางส่วน)
-- [ ] `src/app.ts`: route `POST /reports` เรียก `ReportStore` ที่มีอยู่แล้ว, เพิ่ม `reports` / `reportsNotice` ใน `GET /districts/:id`, `toPublicReport`, ขยาย `Context` ให้รับ `store`
-- [ ] test เดิมใน `tests/app.test.ts` ผ่านโดยไม่แก้
+- [x] test ก่อน ใน `tests/app.test.ts`
+  - [x] `POST /reports` ข้อมูลถูกต้อง → `201`, `merged: false`, มี `reportsNotice` (RPT-REQ-001 กรณีปกติ, RPT-REQ-009)
+  - [x] `GET /districts/lat-phrao` หลัง POST → `reports` มี 1 รายการ **7 key พอดี** เวลาเป็น `+07:00` และมี `reportsNotice` (RPT-REQ-006, RPT-REQ-009)
+  - [x] เขตที่ไม่มีรายงาน → `reports: []` (RPT-REQ-006)
+  - [x] ตรวจขั้นต่ำ: body ไม่ใช่ object, ช่องใดชนิดผิด หรือ `depthCm` ไม่ใช่จำนวนเต็ม 1–300 → `400` และ store ไม่เปลี่ยน (RPT-REQ-001 บางส่วน)
+- [x] `src/app.ts`: route `POST /reports` เรียก `ReportStore` ที่มีอยู่แล้ว, เพิ่ม `reports` / `reportsNotice` ใน `GET /districts/:id`, `toPublicReport`, ขยาย `Context` ให้รับ `store`
+- [x] test เดิมใน `tests/app.test.ts` ผ่านโดยไม่แก้
 
 ### 2. กฎหลัก: รวมรายงานและหมดอายุ ✅
 
